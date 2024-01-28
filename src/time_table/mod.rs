@@ -15,10 +15,7 @@ pub struct TimeTable {
 
 impl TimeTable {
     pub fn new(title: String, activities: Vec<Activity>) -> TimeTable {
-        TimeTable {
-            title: title,
-            activities: activities,
-        }
+        TimeTable { title, activities }
     }
     pub fn empty() -> TimeTable {
         TimeTable {
@@ -92,7 +89,6 @@ pub fn intersect_time_tables(t1: &TimeTable, t2: &TimeTable) -> TimeTable {
     let acts1 = t1.get_activities().clone();
     let acts2 = t2.get_activities().clone();
 
-    // TODO
     let mut iter1 = acts1.iter();
     let mut iter2 = acts2.iter();
     let mut act1_o = iter1.next();
