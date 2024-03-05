@@ -1,5 +1,14 @@
+pub mod relation;
+pub mod intersection;
+
 use crate::time_table::time_h::TimeH;
 use crate::time_table::activity::{ActIncludeStatus, ActInd, Activity};
+
+type InterStatus = (ActInd, ActIncludeStatus);
+fn status_to_string(statuses: InterStatus) -> String{
+
+    format!("({}, {})", statuses.0.to_string(), statuses.1.to_string())
+}
 
 #[test]
 fn create_activity(){
