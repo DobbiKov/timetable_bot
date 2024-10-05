@@ -1,30 +1,32 @@
 //! # Activity
-//! 
+//!
 //! A module that represents an activity and can get intersection of two activities
 
 use super::time_h::TimeH;
+use core::fmt;
 use std::fmt::Debug;
 // use std::cmp;
 
 pub struct NoIntersectionError;
 
-/// An Enum that represents an IntersectionStatus 
-/// 
+/// An Enum that represents an IntersectionStatus
+///
 /// ## Example:
 /// If the end of an activity is included in the other activity(act 1: 11:44 - *17:57* | act 2: 12:46 - 19:44)
 ///
 /// **ActIncludeStatus::IncludedEnd** represents this situation
-pub enum ActIncludeStatus{
+pub enum ActIncludeStatus {
     None,
     OneIncluded,
     IncludedStart,
     IncludedEnd,
     NoIntersection,
-    Equals
+    Equals,
 }
-impl ActIncludeStatus{
-    pub fn to_string(&self) -> String{
-        let str = match self{
+impl ActIncludeStatus {}
+impl fmt::Display for ActIncludeStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let str = match self {
             ActIncludeStatus::Equals => "ActIncludeStatus::Equals",
             ActIncludeStatus::OneIncluded => "ActIncludeStatus::OneIncluded",
             ActIncludeStatus::IncludedEnd => "ActIncludeStatus::IncludedEnd",
@@ -33,12 +35,12 @@ impl ActIncludeStatus{
             ActIncludeStatus::None => "ActIncludeStatus::None",
         };
 
-        String::from(str)
+        write!(f, "{}", str)
     }
 }
 
-/// An Enum that represents which activitie is related to status 
-/// 
+/// An Enum that represents which activitie is related to status
+///
 /// ## Example:
 /// If the end of an activity is included in the other activity(act 1: 11:44 - *17:57* | act 2: 12:46 - 19:44)
 ///
@@ -49,17 +51,19 @@ pub enum ActInd {
     Second,
 }
 
-impl ActInd{
-    pub fn to_string(&self) -> String{
-        let str = match self{
-            ActInd::None => "ActInd::None",
-            ActInd::First => "ActInd::First",
-            ActInd::Second => "ActInd::Second",
-        };
-        String::from(str)
-    }
-    pub fn print(&self){
+impl ActInd {
+    pub fn print(&self) {
         println!("{}", self.to_string())
+    }
+}
+impl fmt::Display for ActInd {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let str = match self {
+            ActInd::None => "actind::none",
+            ActInd::First => "actind::first",
+            ActInd::Second => "actind::second",
+        };
+        write!(f, "{}", str)
     }
 }
 
@@ -76,20 +80,35 @@ impl Clone for Activity {
     }
 }
 
-impl Eq for Activity{}
+impl Eq for Activity {}
 
-impl Debug for Activity{
+impl Debug for Activity {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Activity").field("title", &self.title).field("start", &self.start).field("end", &self.end).finish()
+        f.debug_struct("Activity")
+            .field("title", &self.title)
+            .field("start", &self.start)
+            .field("end", &self.end)
+            .finish()
     }
 }
 
-impl PartialEq for Activity{
+impl PartialEq for Activity {
     fn eq(&self, other: &Self) -> bool {
         self.title == other.title && self.start == other.start && self.end == other.end
     }
 }
-
+pub fn starts_ealrier(a1: &Activity, a2: &Activity) -> Activity {
+    if a1.start > a2.start {
+        return a1.clone();
+    }
+    a2.clone()
+}
+pub fn starts_ealrier_ind(a1: &Activity, a2: &Activity) -> u8 {
+    if a1.start <= a2.start {
+        return 1;
+    }
+    2
+}
 impl Activity {
     pub fn new(title: String, start: TimeH, end: TimeH) -> Activity {
         if start > end {
@@ -100,48 +119,36 @@ impl Activity {
         }
         Activity { title, start, end }
     }
-    pub fn intersect_with(&mut self, other: &Activity) -> Result<(), NoIntersectionError>{
+    pub fn intersect_with(&mut self, other: &Activity) -> Result<(), NoIntersectionError> {
         let rel = self.get_relation(other);
-        match rel{
-            (_, ActIncludeStatus::None) => {
-                Err(NoIntersectionError)
-            },
-            (_, ActIncludeStatus::Equals) => {
-                Ok(())
-            },
-            (_, ActIncludeStatus::NoIntersection) => {
-                Err(NoIntersectionError)
-            },
-            (ActInd::None, _) => {
-                Err(NoIntersectionError)
-            },
+        match rel {
+            (_, ActIncludeStatus::None) => Err(NoIntersectionError),
+            (_, ActIncludeStatus::Equals) => Ok(()),
+            (_, ActIncludeStatus::NoIntersection) => Err(NoIntersectionError),
+            (ActInd::None, _) => Err(NoIntersectionError),
             (ActInd::First, ActIncludeStatus::OneIncluded) => {
                 self.set_start(other.start);
                 self.set_end(other.end);
                 Ok(())
-            },
+            }
             (ActInd::First, ActIncludeStatus::IncludedStart) => {
                 self.set_start(other.start);
                 Ok(())
-            },
+            }
             (ActInd::First, ActIncludeStatus::IncludedEnd) => {
                 self.set_end(other.end);
                 Ok(())
-            },
+            }
 
-
-            (ActInd::Second, ActIncludeStatus::OneIncluded) => {
-                Ok(())
-            },
+            (ActInd::Second, ActIncludeStatus::OneIncluded) => Ok(()),
             (ActInd::Second, ActIncludeStatus::IncludedStart) => {
                 self.set_end(other.end);
                 Ok(())
-            },
+            }
             (ActInd::Second, ActIncludeStatus::IncludedEnd) => {
                 self.set_start(other.start);
                 Ok(())
-            },
-
+            }
         }
     }
     pub fn get_start(&self) -> TimeH {
@@ -150,49 +157,52 @@ impl Activity {
     pub fn get_end(&self) -> TimeH {
         self.end
     }
-    pub fn set_start(&mut self, start: TimeH){
+    pub fn set_start(&mut self, start: TimeH) {
         self.start = start
     }
-    pub fn set_end(&mut self, end: TimeH){
+    pub fn set_end(&mut self, end: TimeH) {
         self.end = end
     }
-    pub fn to_string(&self) -> String{
-        format!("{}: {} - {}", self.title, self.start.to_string(), self.end.to_string())
+    pub fn to_string(&self) -> String {
+        format!(
+            "{}: {} - {}",
+            self.title,
+            self.start.to_string(),
+            self.end.to_string()
+        )
     }
-    pub fn print(&self){
+    pub fn print(&self) {
         println!("- {}", self.to_string())
     }
-    pub fn get_relation(&self, other: &Activity) -> (ActInd, ActIncludeStatus){
-        if self.get_start() == other.get_start() && self.get_end() == other.get_end(){
+    pub fn get_relation(&self, other: &Activity) -> (ActInd, ActIncludeStatus) {
+        if self.get_start() == other.get_start() && self.get_end() == other.get_end() {
             return (ActInd::None, ActIncludeStatus::Equals);
         }
-        if self.get_start() <= other.get_start() && self.get_end() >= other.get_end(){
+        if self.get_start() <= other.get_start() && self.get_end() >= other.get_end() {
             return (ActInd::Second, ActIncludeStatus::OneIncluded);
         }
-        if self.get_start() >= other.get_start() && self.get_end() <= other.get_end(){
+        if self.get_start() >= other.get_start() && self.get_end() <= other.get_end() {
             return (ActInd::First, ActIncludeStatus::OneIncluded);
         }
 
-        if self.get_start() > other.get_end() || self.get_end() < other.get_start(){
+        if self.get_start() > other.get_end() || self.get_end() < other.get_start() {
             return (ActInd::None, ActIncludeStatus::NoIntersection);
         }
 
-        if self.get_start() >= other.get_start() && self.get_start() <= other.get_end(){
+        if self.get_start() >= other.get_start() && self.get_start() <= other.get_end() {
             return (ActInd::First, ActIncludeStatus::IncludedStart);
         }
-        if self.get_end() >= other.get_start() && self.get_end() <= other.get_end(){
+        if self.get_end() >= other.get_start() && self.get_end() <= other.get_end() {
             return (ActInd::First, ActIncludeStatus::IncludedEnd);
         }
 
-        if other.get_start() >= self.get_start() && other.get_start() < self.get_end(){
+        if other.get_start() >= self.get_start() && other.get_start() < self.get_end() {
             return (ActInd::Second, ActIncludeStatus::IncludedStart);
         }
-        if other.get_end() >= self.get_start() && other.get_end() < self.get_end(){
+        if other.get_end() >= self.get_start() && other.get_end() < self.get_end() {
             return (ActInd::Second, ActIncludeStatus::IncludedEnd);
         }
 
         return (ActInd::None, ActIncludeStatus::None);
-
-
     }
 }
