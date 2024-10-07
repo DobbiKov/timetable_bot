@@ -2,6 +2,8 @@ use core::fmt;
 use std::cmp;
 use std::ops;
 
+use super::activity::Activity;
+
 #[derive(Debug)]
 pub struct TimeH {
     hour: u8,
@@ -30,6 +32,9 @@ impl TimeH {
     pub fn print(&self) {
         println!("{}:{:0}", self.hour, self.minute);
         ()
+    }
+    pub fn from(act: TimeH) -> TimeH {
+        act
     }
 }
 

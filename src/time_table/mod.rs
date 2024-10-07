@@ -20,6 +20,52 @@ impl TimeTable {
             activities: activities,
         }
     }
+    pub fn empty() -> TimeTable {
+        TimeTable {
+            title: "".to_string(),
+            activities: Vec::<Activity>::new(),
+        }
+    }
+    pub fn inverse(&self) -> TimeTable {
+        if self.activities.is_empty() {
+            return TimeTable {
+                title: self.title.clone(),
+                activities: vec![Activity::new(
+                    "".to_string(),
+                    TimeH::new(0, 0),
+                    TimeH::new(23, 59),
+                )],
+            };
+        }
+        let f_act = Activity::new(
+            "".to_string(),
+            TimeH::new(0, 0),
+            TimeH::from(self.activities.first().unwrap().get_start()),
+        );
+        let acts_size = self.activities.len();
+        let mut acts_res = vec![f_act];
+        for act_ind in 1..acts_size {
+            let act = (self.activities[act_ind]).clone();
+            let prev_act = (self.activities[act_ind - 1]).clone();
+            acts_res.push(Activity::new(
+                "".to_string(),
+                TimeH::from(prev_act.get_end()),
+                TimeH::from(act.get_start()),
+            ))
+        }
+        let last_act_time = acts_res.last().unwrap().get_end();
+
+        if last_act_time.get_time() != (23, 59) {
+            let last_act = self.activities.last().unwrap();
+            acts_res.push(Activity::new(
+                "".to_string(),
+                TimeH::from(last_act.get_end()),
+                TimeH::new(23, 59),
+            ));
+        }
+
+        TimeTable::new("inverse".to_string(), acts_res)
+    }
     pub fn get_activities(&self) -> &Vec<Activity> {
         &self.activities
     }

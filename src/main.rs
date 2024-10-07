@@ -63,5 +63,7 @@ fn main() {
 
     let res = intersect_time_tables(&time_table, &schedule);
     res.print();
+    println!("\n");
+    res.inverse().print();
     // println!("{:?}", t.get_time());
 }
